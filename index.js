@@ -6,13 +6,7 @@ const app = express();
 app.get('/', (req, res) => {
   res.send("AWS Node App Running 🚀");
 });
-
-async function startServer() {
-  await connectDB();
-
-  app.listen(3000, () => {
-    console.log("Server started on port 3000");
-  });
-}
-
-startServer();
+connectDB();
+app.listen(3000, () => {
+  console.log("Server started on port 3000");
+});
