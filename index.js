@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const connectDB = require('./Database/db').connectDB;
+const pool = require('./Database/db').pool;
 const app = express();
 
 app.get('/', (req, res) => {
