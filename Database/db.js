@@ -7,8 +7,15 @@ const pool = new Client({
   database: process.env.DB_NAME,
   port: 5432,
 });
-pool.connect()
-  .then(() => console.log("✅ Database Connected Successfully"))
-  .catch(err => console.error("❌ Database Connection Failed:", err));
+async function connectDB() {
+  try {
+    await pool.connect();
+    console.log("Database connected successfully");
+  } catch (err) {
+    console.error("DB connection error:", err);
+    process.exit(1); // stop app if DB fails
+  }
+}
 
-module.exports=pool;
+
+module.exports={ pool, connectDB };
