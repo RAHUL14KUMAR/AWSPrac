@@ -19,6 +19,21 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
+app.get("/create-table", async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100)
+      )
+    `);
+    res.send("Table created successfully");
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/users", (req, res) => {
   const { name, email } = req.body;
   db.query(
