@@ -6,6 +6,9 @@ const pool = new Client({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   port: 5432,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 async function connectDB() {
   try {
