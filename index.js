@@ -2,7 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const connectDB = require('./Database/db').connectDB;
 const pool = require('./Database/db').pool;
+
 const app = express();
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send("AWS Node App Running 🚀");
