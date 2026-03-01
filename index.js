@@ -36,8 +36,8 @@ app.get("/create-table", async (req, res) => {
 
 app.post("/users", (req, res) => {
   const { name, email } = req.body;
-  db.query(
-    "INSERT INTO users (name, email) VALUES (?, ?)",
+  pool.query(
+    "INSERT INTO users (name, email) VALUES ($1, $2)",
     [name, email],
     (err, result) => {
       if (err) return res.status(500).json(err);
