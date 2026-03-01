@@ -17,6 +17,18 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
+app.post("/users", (req, res) => {
+  const { name, email } = req.body;
+  db.query(
+    "INSERT INTO users (name, email) VALUES (?, ?)",
+    [name, email],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+      res.json({ message: "User created" });
+    }
+  );
+});
+
 connectDB();
 app.listen(3000, () => {
   console.log("Server started on port 3000");
