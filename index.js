@@ -46,6 +46,13 @@ app.post("/users", (req, res) => {
   );
 });
 
+app.get("/users", (req, res) => {
+  pool.query("SELECT * FROM users", (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result.rows);
+  });
+});
+
 connectDB();
 app.listen(3000, () => {
   console.log("Server started on port 3000");
