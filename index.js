@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const connectDB = require('./Database/db').connectDB;
 const pool = require('./Database/db').pool;
+const multer = require('multer');
+const { S3Client, PutObjectCommand,GetObjectCommand } = require('@aws-sdk/client-s3');
 
 const app = express();
 app.use(express.json());
@@ -19,6 +21,7 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
+// Route to create users table
 app.get("/create-table", async (req, res) => {
   try {
     await pool.query(`
@@ -52,6 +55,44 @@ app.get("/users", (req, res) => {
     res.json(result.rows);
   });
 });
+
+
+
+// upload controller develops here
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+const BUCKET_NAME = process.env.AWS_BUCKET || "";
+const REGION_NAME = process.env.AWS_REGION || "";
+const s3 = new S3Client({
+  region: REGION_NAME,
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY
+  }
+})
+async function putObject(fName,cType){
+    const command=new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: `${fName}`,
+        ContentType: cType,
+    })
+
+    const url = await getSignedUrl(s3,command);
+    return url;
+}
+
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const url = await putObject(`${req.file.originalname}`,"image/jpeg");
+    console.log("URL for uploading the photo is: ", url);
+    res.json({ message: "File uploaded to S3" });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+
 
 connectDB();
 app.listen(3000, () => {
