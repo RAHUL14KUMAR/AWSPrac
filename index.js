@@ -4,6 +4,8 @@ const connectDB = require('./Database/db').connectDB;
 const pool = require('./Database/db').pool;
 const multer = require('multer');
 const { S3Client, PutObjectCommand,GetObjectCommand } = require('@aws-sdk/client-s3');
+
+// we used the getSignedUrl for the url from aws so that we can able to upload the photo to s3 using that url. means photo is getting upload on the behalf of aws root user
 const { getSignedUrl }= require( "@aws-sdk/s3-request-presigner");
 
 const app = express();
@@ -72,17 +74,32 @@ const s3 = new S3Client({
     secretAccessKey: process.env.SECRET_ACCESS_KEY
   }
 })
+
+// on the behalf of root user we are seeeing the upload files data
+async function getObjectUrl(key){
+    const command = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+    });
+
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    return url;
+}
 async function putObject(file){
+    const KEY=Date.now() + "-" + file.originalname
     const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: Date.now() + "-" + file.originalname,
+        Key: KEY,
         Body: file.buffer,
         ContentType: file.mimetype,
     });
 
     await s3.send(command);
 
-    return `https://${BUCKET_NAME}.s3.${REGION_NAME}.amazonaws.com/${command.input.Key}`;
+    // this is public url so that everyone on the internet can access the file but my s3 bucket is private now so we need to use the getObjectUrl function to get the signed url for the file which is private and we can access it using that url for a limited time.
+    // return `https://${BUCKET_NAME}.s3.${REGION_NAME}.amazonaws.com/${command.input.Key}`;
+
+    return KEY;
 }
 
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -91,12 +108,14 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    const url = await putObject(req.file);
+    const KEY = await putObject(req.file);
+    const url = await getObjectUrl(KEY);
 
     console.log("Uploaded file URL:", url);
 
     res.json({
       message: "File uploaded to S3 successfully",
+      KEY:KEY,
       url: url
     });
 
