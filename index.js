@@ -84,6 +84,7 @@ async function putObject(fName,cType){
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
+    console.log("req",req.file);
     const url = await putObject(`${req.file.originalname}`,"image/jpeg");
     console.log("URL for uploading the photo is: ", url);
     res.json({ message: "File uploaded to S3" });
@@ -91,8 +92,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     res.status(500).json(error);
   }
 });
-
-
 
 connectDB();
 app.listen(3000, () => {
