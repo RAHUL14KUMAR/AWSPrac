@@ -72,29 +72,41 @@ const s3 = new S3Client({
     secretAccessKey: process.env.SECRET_ACCESS_KEY
   }
 })
-async function putObject(fName,cType){
-    const command=new PutObjectCommand({
+async function putObject(file){
+    const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
-        Key: `${fName}`,
-        ContentType: cType,
-    })
+        Key: Date.now() + "-" + file.originalname,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+    });
 
-    const url = await getSignedUrl(s3,command);
-    return url;
+    await s3.send(command);
+
+    return `https://${BUCKET_NAME}.s3.${REGION_NAME}.amazonaws.com/${command.input.Key}`;
 }
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    // console.log("req---->",req);
-    const url = await putObject(`${req.file.originalname}`,"image/jpeg");
-    console.log("URL for uploading the photo is: ", url);
-    res.json({ message: "File uploaded to S3" });
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const url = await putObject(req.file);
+
+    console.log("Uploaded file URL:", url);
+
+    res.json({
+      message: "File uploaded to S3 successfully",
+      url: url
+    });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json(error);
   }
 });
 
-// connectDB();
+connectDB();
 app.listen(3000, () => {
   console.log("Server started on port 3000");
 });
