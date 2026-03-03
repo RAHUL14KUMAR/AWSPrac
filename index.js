@@ -4,6 +4,7 @@ const connectDB = require('./Database/db').connectDB;
 const pool = require('./Database/db').pool;
 const multer = require('multer');
 const { S3Client, PutObjectCommand,GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl }= require( "@aws-sdk/s3-request-presigner");
 
 const app = express();
 app.use(express.json());
@@ -84,7 +85,7 @@ async function putObject(fName,cType){
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    console.log("req",req.file);
+    // console.log("req---->",req);
     const url = await putObject(`${req.file.originalname}`,"image/jpeg");
     console.log("URL for uploading the photo is: ", url);
     res.json({ message: "File uploaded to S3" });
@@ -93,7 +94,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-connectDB();
+// connectDB();
 app.listen(3000, () => {
   console.log("Server started on port 3000");
 });
